@@ -10,7 +10,6 @@ Géolocalisation · Caméra · Orientation
 ![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)
 ![Android](https://img.shields.io/badge/Android-WebView-3DDC84?logo=android&logoColor=white)
 ![Java](https://img.shields.io/badge/Java-ED8B00?logo=openjdk&logoColor=white)
-![License](https://img.shields.io/badge/Licence-MIT-blue)
 
 [**🚀 Démo en ligne**](https://asmaaaa01ab.github.io/mobile-device-explorer/) ·
 [Fonctionnalités](#-fonctionnalités) ·
