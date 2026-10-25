@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#2563EB">
+    <title>Device Explorer</title>
+    <style>
+        :root{
+          --bg:#F4F6FA; --surface:#FFFFFF; --surface-2:#F1F5F9; --border:#E2E8F0;
+          --text:#0F172A; --text-2:#475569; --text-3:#94A3B8;
+          --primary:#2563EB; --primary-600:#1D4ED8; --primary-50:#EFF6FF; --primary-100:#DBEAFE;
+          --success:#16A34A; --success-50:#F0FDF4; --success-100:#DCFCE7;
+          --warning:#B45309; --warning-50:#FFFBEB; --warning-100:#FEF3C7;
+          --danger:#DC2626;  --danger-50:#FEF2F2;  --danger-100:#FEE2E2;
+          --r-sm:10px; --r-md:14px; --r-lg:20px;
+          --shadow:0 1px 2px rgba(15,23,42,.05),0 4px 14px rgba(15,23,42,.06);
+          --nav-h:68px;
+        }
+        *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+        html{color-scheme:light}
+        body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+          font-size:16px;line-height:1.45;-webkit-font-smoothing:antialiased;padding-bottom:calc(var(--nav-h) + 16px)}
+        button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+        :focus-visible{outline:3px solid var(--primary-100);outline-offset:2px;border-radius:8px}
+        .ico{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;flex:none}
+        .ico.sm{width:18px;height:18px}
+
+        /* ---------- Barre supérieure ---------- */
+        .appbar{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.92);backdrop-filter:blur(10px);
+          border-bottom:1px solid var(--border);padding:12px 16px;display:flex;align-items:center;gap:12px}
+        .logo{width:38px;height:38px;border-radius:11px;background:linear-gradient(135deg,#3B82F6,#1D4ED8);color:#fff;
+          display:grid;place-items:center;box-shadow:0 2px 6px rgba(37,99,235,.35)}
+        .appbar h1{font-size:1.05rem;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+        .appbar small{display:block;color:var(--text-2);font-size:.78rem}
+        .secure{margin-left:auto;display:flex;align-items:center;gap:6px;font-size:.72rem;font-weight:600;padding:5px 10px;
+          border-radius:999px;background:var(--success-100);color:var(--success)}
+        .secure.ko{background:var(--danger-100);color:var(--danger)}
+
+        /* ---------- Écrans ---------- */
+        main{padding:16px;max-width:640px;margin:0 auto}
+        .view{display:none;animation:fade .22s ease}
+        .view.active{display:block}
+        @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+        .page-title{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;margin-bottom:4px}
+        .page-sub{color:var(--text-2);font-size:.92rem;margin-bottom:18px}
+        .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+        .card-title{font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-2);margin-bottom:12px}
+
+        /* ---------- Accueil ---------- */
+        .hero{background:linear-gradient(135deg,#2563EB,#1E40AF);color:#fff;border-radius:var(--r-lg);padding:22px 20px;margin-bottom:16px;
+          box-shadow:0 8px 24px rgba(37,99,235,.28)}
+        .hero h2{font-size:1.3rem;font-weight:800;letter-spacing:-.02em;margin-bottom:6px}
+        .hero p{font-size:.92rem;opacity:.92}
+        .tile{width:100%;display:flex;align-items:center;gap:14px;text-align:left;background:var(--surface);border:1px solid var(--border);
+          border-radius:var(--r-md);padding:14px;margin-bottom:10px;box-shadow:var(--shadow);min-height:72px;transition:transform .12s,border-color .12s}
+        .tile:active{transform:scale(.985);border-color:var(--primary)}
+        .tile .ti{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;background:var(--primary-50);color:var(--primary)}
+        .tile .tt{flex:1;min-width:0}
+        .tile .tt b{display:block;font-size:1rem}
+        .tile .tt span{font-size:.82rem;color:var(--text-2)}
+        .tile .chev{color:var(--text-3)}
+        .badge{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;padding:4px 9px;border-radius:999px;white-space:nowrap}
+        .badge::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+        .badge.ok{background:var(--success-100);color:var(--success)}
+        .badge.ko{background:var(--danger-100);color:var(--danger)}
+        .badge.on{background:var(--primary-100);color:var(--primary-600)}
+        .badge.on::before{animation:pulse 1.2s infinite}
+        .badge.idle{background:var(--surface-2);color:var(--text-2)}
+        @keyframes pulse{50%{opacity:.25}}
+
+        .activity{list-style:none;padding:0}
+        .activity li{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);font-size:.88rem}
+        .activity li:last-child{border-bottom:0}
+        .activity .dot{width:9px;height:9px;border-radius:50%;margin-top:6px;background:var(--text-3);flex:none}
+        .activity .dot.success{background:var(--success)} .activity .dot.error{background:var(--danger)}
+        .activity .dot.warning{background:#F59E0B} .activity .dot.info{background:var(--primary)}
+        .activity small{display:block;color:var(--text-3);font-size:.74rem}
+        .empty{color:var(--text-3);font-size:.88rem;text-align:center;padding:10px 0}
+
+        /* ---------- Bannières d'état ---------- */
+        .banner{display:flex;gap:12px;align-items:flex-start;padding:13px 14px;border-radius:var(--r-md);margin-bottom:14px;border:1px solid transparent}
+        .banner .bt{font-weight:700;font-size:.92rem}
+        .banner .bm{font-size:.85rem;margin-top:2px}
+        .banner.info{background:var(--primary-50);border-color:var(--primary-100);color:#1E3A8A}
+        .banner.success{background:var(--success-50);border-color:var(--success-100);color:#14532D}
+        .banner.warning{background:var(--warning-50);border-color:var(--warning-100);color:var(--warning)}
+        .banner.error{background:var(--danger-50);border-color:var(--danger-100);color:#991B1B}
+
+        /* ---------- Boutons ---------- */
+        .btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;min-height:52px;padding:0 18px;border-radius:var(--r-md);
+          font-weight:700;font-size:1rem;transition:transform .1s,background .15s}
+        .btn:active{transform:scale(.98)}
+        .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 12px rgba(37,99,235,.3)}
+        .btn-primary:active{background:var(--primary-600)}
+        .btn-secondary{background:var(--surface);color:var(--text);border:1.5px solid var(--border)}
+        .btn-danger{background:var(--danger);color:#fff}
+        .btn:disabled{opacity:.45;box-shadow:none;pointer-events:none}
+        .btn-row{display:flex;gap:10px;margin-top:12px}
+        .btn-row .btn{flex:1}
+
+        /* ---------- Position ---------- */
+        .coords{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+        .stat{background:var(--surface-2);border-radius:var(--r-sm);padding:12px}
+        .stat span{display:block;font-size:.72rem;color:var(--text-2);font-weight:600;margin-bottom:2px}
+        .stat b{font-size:1.05rem;font-variant-numeric:tabular-nums;word-break:break-word}
+        .stat.big b{font-size:1.25rem;letter-spacing:-.01em}
+        .acc{display:flex;align-items:center;justify-content:space-between;gap:10px}
+        .meter{display:flex;gap:4px;margin-top:8px}
+        .meter i{flex:1;height:6px;border-radius:3px;background:var(--border)}
+        .meter.l1 i:nth-child(-n+1){background:var(--danger)}
+        .meter.l2 i:nth-child(-n+2){background:#F59E0B}
+        .meter.l3 i:nth-child(-n+3){background:var(--success)}
+        .switch-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0}
+        .switch-row b{display:block;font-size:.98rem} .switch-row span{font-size:.82rem;color:var(--text-2)}
+        .switch{width:52px;height:32px;border-radius:999px;background:#CBD5E1;position:relative;transition:background .2s;flex:none}
+        .switch::after{content:"";position:absolute;top:3px;left:3px;width:26px;height:26px;border-radius:50%;background:#fff;
+          box-shadow:0 1px 3px rgba(0,0,0,.3);transition:transform .2s}
+        .switch[aria-checked="true"]{background:var(--primary)}
+        .switch[aria-checked="true"]::after{transform:translateX(20px)}
+
+        /* ---------- Caméra ---------- */
+        .viewfinder{position:relative;border-radius:var(--r-lg);overflow:hidden;background:#E2E8F0;aspect-ratio:3/4;max-height:56vh;width:100%;margin-bottom:12px;
+          box-shadow:var(--shadow)}
+        .viewfinder video{width:100%;height:100%;object-fit:cover;display:block}
+        .vf-empty{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;color:var(--text-2);
+          text-align:center;padding:24px;font-size:.9rem}
+        .vf-empty .ico{width:44px;height:44px;color:var(--text-3)}
+        .vf-tags{position:absolute;left:12px;bottom:12px;display:flex;gap:6px;flex-wrap:wrap}
+        .tag{background:rgba(15,23,42,.72);color:#fff;font-size:.72rem;font-weight:600;padding:4px 10px;border-radius:999px;backdrop-filter:blur(6px)}
+        .note{font-size:.82rem;color:var(--text-2);display:flex;gap:8px;align-items:flex-start}
+
+        /* ---------- Orientation ---------- */
+        .stage{display:grid;grid-template-columns:1fr 1fr;gap:10px;align-items:center;justify-items:center;padding:6px 0 14px}
+        .scene{perspective:520px;height:140px;display:grid;place-items:center}
+        .phone{width:62px;height:112px;border-radius:13px;border:3px solid var(--primary);background:linear-gradient(160deg,#DBEAFE,#fff);
+          position:relative;transition:transform .08s linear;box-shadow:0 8px 18px rgba(37,99,235,.25)}
+        .phone::after{content:"";position:absolute;top:6px;left:50%;width:18px;height:4px;margin-left:-9px;border-radius:2px;background:var(--primary)}
+        .compass{width:112px;height:112px;border-radius:50%;border:3px solid var(--border);background:var(--surface-2);position:relative}
+        .compass b{position:absolute;top:3px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--text-2)}
+        .needle{position:absolute;left:50%;top:50%;width:0;height:0;margin:-42px 0 0 -8px;border-left:8px solid transparent;border-right:8px solid transparent;
+          border-bottom:42px solid var(--danger);transform-origin:8px 42px;transition:transform .08s linear}
+        .needle::after{content:"";position:absolute;left:-8px;top:42px;border-left:8px solid transparent;border-right:8px solid transparent;border-top:42px solid #94A3B8}
+        .axis{margin-bottom:14px}
+        .axis-head{display:flex;justify-content:space-between;font-size:.85rem;margin-bottom:6px}
+        .axis-head b{font-variant-numeric:tabular-nums}
+        .axis-head span{color:var(--text-2)}
+        .track{height:8px;border-radius:4px;background:var(--surface-2);position:relative}
+        .track i{position:absolute;top:50%;left:0;width:20px;height:20px;border-radius:50%;background:var(--primary);border:3px solid #fff;
+          box-shadow:0 1px 4px rgba(15,23,42,.35);transform:translate(-50%,-50%);transition:left .08s linear}
+
+        /* ---------- Navigation basse ---------- */
+        .nav{position:fixed;left:0;right:0;bottom:0;z-index:30;height:var(--nav-h);background:#fff;border-top:1px solid var(--border);
+          display:grid;grid-template-columns:repeat(4,1fr);padding-bottom:env(safe-area-inset-bottom,0)}
+        .nav button{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font-size:.7rem;font-weight:600;color:var(--text-3);position:relative}
+        .nav button[aria-current="page"]{color:var(--primary)}
+        .nav button[aria-current="page"]::before{content:"";position:absolute;top:0;width:34px;height:3px;border-radius:0 0 3px 3px;background:var(--primary)}
+
+        @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+    </style>
+</head>
+<body>
+
+<!-- Icônes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8"/><path d="M5 9.5V20h14V9.5"/></symbol>
+    <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0114 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+    <symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3v12H4z"/><circle cx="12" cy="13.5" r="3.5"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/></symbol>
+    <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3l10 18H2z"/><path d="M12 10v5M12 18v.4"/></symbol>
+    <symbol id="i-x" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 9l6 6M15 9l-6 6"/></symbol>
+    <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6v.4"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M4 8h13l-3-3M20 16H7l3 3"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6"/></symbol>
+    <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"/><path d="M9 12l2 2 4-4"/></symbol>
+    <symbol id="i-grid" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></symbol>
+</svg>
+
+<header class="appbar">
+    <div class="logo"><svg class="ico"><use href="#i-grid"/></svg></div>
+    <div><h1>Device Explorer</h1><small>API du smartphone</small></div>
+    <div class="secure" id="secureBadge"><svg class="ico sm"><use href="#i-shield"/></svg><span>Sécurisé</span></div>
+</header>
+
+<main>
+
+    <!-- ========== ACCUEIL ========== -->
+    <section class="view active" id="view-home" aria-label="Accueil">
+        <div class="hero">
+            <h2>Explorez votre appareil</h2>
+            <p>Testez en direct la position, la caméra et les capteurs d’orientation grâce aux API Web modernes.</p>
+        </div>
+
+        <button class="tile" data-go="geo">
+            <div class="ti"><svg class="ico"><use href="#i-pin"/></svg></div>
+            <div class="tt"><b>Géolocalisation</b><span>Position GPS et précision</span></div>
+            <span class="badge idle" id="tile-geo">—</span>
+            <svg class="ico sm chev"><use href="#i-chev"/></svg>
+        </button>
+        <button class="tile" data-go="cam">
+            <div class="ti"><svg class="ico"><use href="#i-camera"/></svg></div>
+            <div class="tt"><b>Caméra</b><span>Aperçu vidéo en direct</span></div>
+            <span class="badge idle" id="tile-cam">—</span>
+            <svg class="ico sm chev"><use href="#i-chev"/></svg>
+        </button>
+        <button class="tile" data-go="ori">
+            <div class="ti"><svg class="ico"><use href="#i-compass"/></svg></div>
+            <div class="tt"><b>Orientation</b><span>Inclinaison et boussole</span></div>
+            <span class="badge idle" id="tile-ori">—</span>
+            <svg class="ico sm chev"><use href="#i-chev"/></svg>
+        </button>
+
+        <div class="card" style="margin-top:18px">
+            <div class="card-title">Activité récente</div>
+            <ul class="activity" id="activity"><li class="empty" style="display:block">Aucune activité pour le moment.</li></ul>
+        </div>
+    </section>
+
+    <!-- ========== POSITION ========== -->
+    <section class="view" id="view-geo" aria-label="Géolocalisation">
+        <h2 class="page-title">Position</h2>
+        <p class="page-sub">Obtenez vos coordonnées GPS en haute précision.</p>
+
+        <div class="banner info" id="geoBanner" role="status" aria-live="polite">
+            <svg class="ico"><use href="#i-info"/></svg>
+            <div><p class="bt">Prêt</p><p class="bm">Appuyez sur « Obtenir ma position » pour commencer.</p></div>
+        </div>
+
+        <div class="card">
+            <div class="coords">
+                <div class="stat big"><span>Latitude</span><b id="gLat">—</b></div>
+                <div class="stat big"><span>Longitude</span><b id="gLon">—</b></div>
+            </div>
+            <div class="stat">
+                <div class="acc"><span style="margin:0">Précision</span><b id="gAcc">—</b></div>
+                <div class="meter" id="gMeter"><i></i><i></i><i></i></div>
+            </div>
+            <div class="coords" style="margin:10px 0 0">
+                <div class="stat"><span>Altitude</span><b id="gAlt">—</b></div>
+                <div class="stat"><span>Vitesse</span><b id="gSpd">—</b></div>
+            </div>
+            <div class="stat" style="margin-top:10px"><span>Dernière mise à jour</span><b id="gTime">—</b></div>
+        </div>
+
+        <div class="card">
+            <div class="switch-row">
+                <div><b>Suivi en continu</b><span>Met à jour la position en temps réel</span></div>
+                <button class="switch" id="geoWatch" role="switch" aria-checked="false" aria-label="Suivi en continu"></button>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="geoOnce"><svg class="ico"><use href="#i-pin"/></svg>Obtenir ma position</button>
+    </section>
+
+    <!-- ========== CAMERA ========== -->
+    <section class="view" id="view-cam" aria-label="Caméra">
+        <h2 class="page-title">Caméra</h2>
+        <p class="page-sub">Affichez l’aperçu de la caméra de votre téléphone.</p>
+
+        <div class="banner info" id="camBanner" role="status" aria-live="polite">
+            <svg class="ico"><use href="#i-info"/></svg>
+            <div><p class="bt">Prêt</p><p class="bm">L’accès à la caméra sera demandé au démarrage.</p></div>
+        </div>
+
+        <div class="viewfinder">
+            <video id="video" autoplay playsinline muted></video>
+            <div class="vf-empty" id="vfEmpty"><svg class="ico"><use href="#i-camera"/></svg><span>L’aperçu apparaîtra ici</span></div>
+            <div class="vf-tags" id="vfTags" hidden><span class="tag" id="tagRes">—</span><span class="tag" id="tagFace">—</span></div>
+        </div>
+
+        <div class="btn-row" style="margin-top:0">
+            <button class="btn btn-primary" id="camToggle"><svg class="ico"><use href="#i-camera"/></svg><span>Démarrer</span></button>
+            <button class="btn btn-secondary" id="camSwitch" disabled aria-label="Changer de caméra"><svg class="ico"><use href="#i-flip"/></svg>Inverser</button>
+        </div>
+        <p class="note" style="margin-top:14px"><svg class="ico sm"><use href="#i-shield"/></svg>
+            <span>Le flux vidéo reste sur votre appareil : rien n’est enregistré ni envoyé.</span></p>
+    </section>
+
+    <!-- ========== ORIENTATION ========== -->
+    <section class="view" id="view-ori" aria-label="Orientation">
+        <h2 class="page-title">Orientation</h2>
+        <p class="page-sub">Observez l’inclinaison du téléphone en temps réel.</p>
+
+        <div class="banner info" id="oriBanner" role="status" aria-live="polite">
+            <svg class="ico"><use href="#i-info"/></svg>
+            <div><p class="bt">Prêt</p><p class="bm">Démarrez l’observation puis inclinez votre téléphone.</p></div>
+        </div>
+
+        <div class="card">
+            <div class="stage">
+                <div class="scene"><div class="phone" id="phone"></div></div>
+                <div class="compass"><b>N</b><div class="needle" id="needle"></div></div>
+            </div>
+
+            <div class="axis">
+                <div class="axis-head"><span>Alpha · rotation (Z)</span><b id="oA">—</b></div>
+                <div class="track"><i id="kA" style="left:0%"></i></div>
+            </div>
+            <div class="axis">
+                <div class="axis-head"><span>Bêta · avant/arrière (X)</span><b id="oB">—</b></div>
+                <div class="track"><i id="kB" style="left:50%"></i></div>
+            </div>
+            <div class="axis" style="margin-bottom:0">
+                <div class="axis-head"><span>Gamma · gauche/droite (Y)</span><b id="oG">—</b></div>
+                <div class="track"><i id="kG" style="left:50%"></i></div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="oriToggle"><svg class="ico"><use href="#i-compass"/></svg><span>Démarrer l’observation</span></button>
+    </section>
+
+</main>
+
+<nav class="nav" aria-label="Navigation principale">
+    <button data-go="home" aria-current="page"><svg class="ico"><use href="#i-home"/></svg>Accueil</button>
+    <button data-go="geo"><svg class="ico"><use href="#i-pin"/></svg>Position</button>
+    <button data-go="cam"><svg class="ico"><use href="#i-camera"/></svg>Caméra</button>
+    <button data-go="ori"><svg class="ico"><use href="#i-compass"/></svg>Orientation</button>
+</nav>
+
+<script>
+    "use strict";
+    const $ = id => document.getElementById(id);
+    const fmt = (v, d = 5, unit = "") => (v === null || v === undefined || Number.isNaN(v)) ? "n/d" : v.toFixed(d) + unit;
+
+    /* ---------- Navigation ---------- */
+    function go(name){
+      document.querySelectorAll(".view").forEach(v => v.classList.toggle("active", v.id === "view-" + name));
+      document.querySelectorAll(".nav button").forEach(b => {
+        if (b.dataset.go === name) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+      });
+      window.scrollTo({ top: 0 });
+    }
+    document.querySelectorAll("[data-go]").forEach(el => el.addEventListener("click", () => go(el.dataset.go)));
+
+    /* ---------- Composants ---------- */
+    const ICON = { info: "#i-info", success: "#i-check", warning: "#i-alert", error: "#i-x" };
+    function banner(id, type, title, msg){
+      const el = $(id);
+      el.className = "banner " + type;
+      el.querySelector("use").setAttribute("href", ICON[type]);
+      el.querySelector(".bt").textContent = title;
+      el.querySelector(".bm").textContent = msg || "";
+    }
+    function tile(name, state, label){
+      const b = $("tile-" + name);
+      b.className = "badge " + state;
+      b.textContent = label;
+    }
+    const activity = [];
+    function log(type, text){
+      activity.unshift({ type, text, time: new Date().toLocaleTimeString("fr-FR") });
+      activity.length = Math.min(activity.length, 8);
+      $("activity").innerHTML = activity.map(a =>
+        `<li><span class="dot ${a.type}"></span><div>${a.text}<small>${a.time}</small></div></li>`).join("");
+    }
+
+    /* ---------- Détection des capacités ---------- */
+    const CAN = {
+      geo: "geolocation" in navigator,
+      cam: !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia),
+      ori: "DeviceOrientationEvent" in window
+    };
+    (function init(){
+      if (!window.isSecureContext){
+        $("secureBadge").classList.add("ko");
+        $("secureBadge").querySelector("span").textContent = "Non sécurisé";
+      }
+      tile("geo", CAN.geo ? "ok" : "ko", CAN.geo ? "Compatible" : "Non supporté");
+      tile("cam", CAN.cam ? "ok" : "ko", CAN.cam ? "Compatible" : "Non supporté");
+      tile("ori", CAN.ori ? "ok" : "ko", CAN.ori ? "Compatible" : "Non supporté");
+      log("info", "Application démarrée");
+    })();
+
+    /* =====================================================
+       1) GEOLOCATION API
+       ===================================================== */
+    let watchId = null;
+
+    function geoErrorInfo(e){
+      switch (e.code){
+        case 1:  return ["error",   "Autorisation refusée", "Activez la localisation pour cette application : Paramètres › Applications › Device Explorer › Autorisations."];
+        case 2:  return ["error",   "Position indisponible", "Vérifiez que le GPS est activé et que vous captez un signal suffisant."];
+        case 3:  return ["warning", "Délai dépassé", "La position n’a pas pu être obtenue à temps. Réessayez, de préférence à l’extérieur."];
+        default: return ["error",   "Erreur de localisation", e.message || "Une erreur inconnue est survenue."];
+      }
+    }
+
+    function showPosition(pos){
+      const c = pos.coords;
+      $("gLat").textContent = fmt(c.latitude);
+      $("gLon").textContent = fmt(c.longitude);
+      $("gAcc").textContent = "± " + Math.round(c.accuracy) + " m";
+      $("gAlt").textContent = fmt(c.altitude, 0, " m");
+      $("gSpd").textContent = c.speed == null ? "n/d" : (c.speed * 3.6).toFixed(1) + " km/h";
+      $("gTime").textContent = new Date(pos.timestamp).toLocaleTimeString("fr-FR");
+      const lvl = c.accuracy <= 20 ? 3 : c.accuracy <= 100 ? 2 : 1;
+      $("gMeter").className = "meter l" + lvl;
+      const q = lvl === 3 ? "Précision excellente" : lvl === 2 ? "Précision correcte" : "Précision faible";
+      banner("geoBanner", "success", "Position obtenue", q + (watchId !== null ? " · suivi actif" : ""));
+      tile("geo", watchId !== null ? "on" : "ok", watchId !== null ? "Actif" : "Compatible");
+      log("success", `Position : ${c.latitude.toFixed(4)}, ${c.longitude.toFixed(4)}`);
+    }
+
+    function onGeoError(e){
+      const [type, title, msg] = geoErrorInfo(e);
+      banner("geoBanner", type, title, msg);
+      log(type, "Géolocalisation : " + title);
+      if (e.code === 1) stopWatch(true);
+    }
+
+    function stopWatch(silent){
+      if (watchId !== null){ navigator.geolocation.clearWatch(watchId); watchId = null; }
+      $("geoWatch").setAttribute("aria-checked", "false");
+      tile("geo", CAN.geo ? "ok" : "ko", CAN.geo ? "Compatible" : "Non supporté");
+      if (!silent) log("info", "Suivi de position arrêté");
+    }
+
+    $("geoOnce").addEventListener("click", () => {
+      if (!CAN.geo) return banner("geoBanner", "error", "Non supporté", "La Geolocation API n’est pas disponible sur cet appareil.");
+      banner("geoBanner", "info", "Recherche en cours…", "Acquisition de la position GPS.");
+      navigator.geolocation.getCurrentPosition(showPosition, onGeoError,
+        { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 });
+    });
+
+    $("geoWatch").addEventListener("click", () => {
+      if (!CAN.geo) return banner("geoBanner", "error", "Non supporté", "La Geolocation API n’est pas disponible sur cet appareil.");
+      if (watchId !== null){
+        stopWatch(false);
+        return banner("geoBanner", "info", "Suivi arrêté", "Le suivi en continu est désactivé.");
+      }
+      banner("geoBanner", "info", "Suivi activé", "En attente d’un premier signal GPS…");
+      watchId = navigator.geolocation.watchPosition(showPosition, onGeoError,
+        { enableHighAccuracy: true, timeout: 20000, maximumAge: 1000 });
+      $("geoWatch").setAttribute("aria-checked", "true");
+      tile("geo", "on", "Actif");
+      log("info", "Suivi de position démarré");
+    });
+
+    /* =====================================================
+       2) CAMERA — MediaDevices.getUserMedia
+       ===================================================== */
+    let stream = null, facing = "environment";
+
+    function cameraErrorInfo(e){
+      switch (e.name){
+        case "NotAllowedError":
+        case "PermissionDeniedError": return ["error", "Accès refusé", "Autorisez la caméra dans Paramètres › Applications › Device Explorer › Autorisations."];
+        case "NotFoundError":
+        case "DevicesNotFoundError":  return ["error", "Aucune caméra", "Aucune caméra n’a été détectée sur cet appareil."];
+        case "NotReadableError":
+        case "TrackStartError":       return ["error", "Caméra indisponible", "Elle est peut-être utilisée par une autre application. Fermez-la puis réessayez."];
+        case "OverconstrainedError":  return ["warning", "Caméra incompatible", "Aucune caméra ne correspond aux réglages demandés."];
+        case "SecurityError":         return ["error", "Accès bloqué", "Le contexte n’est pas sécurisé (HTTPS requis)."];
+        default:                      return ["error", "Erreur caméra", (e.name || "") + " " + (e.message || "")];
+      }
+    }
+
+    function setCamUI(active){
+      $("vfEmpty").hidden = active;
+      $("vfTags").hidden = !active;
+      $("camSwitch").disabled = !active;
+      const t = $("camToggle");
+      t.className = "btn " + (active ? "btn-danger" : "btn-primary");
+      t.querySelector("span").textContent = active ? "Arrêter" : "Démarrer";
+      tile("cam", active ? "on" : (CAN.cam ? "ok" : "ko"), active ? "Actif" : (CAN.cam ? "Compatible" : "Non supporté"));
+    }
+
+    async function startCamera(){
+      if (!window.isSecureContext || !CAN.cam)
+        return banner("camBanner", "error", "Non supporté", "La MediaDevices API est indisponible (WebView ancienne ou contexte non sécurisé).");
+      releaseStream();
+      banner("camBanner", "info", "Ouverture…", "Démarrage de la caméra.");
+      try{
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facing }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+        const v = $("video");
+        v.srcObject = stream;
+        await v.play();
+        const s = stream.getVideoTracks()[0].getSettings();
+        $("tagRes").textContent = (s.width || "?") + " × " + (s.height || "?");
+        $("tagFace").textContent = facing === "user" ? "Frontale" : "Arrière";
+        setCamUI(true);
+        banner("camBanner", "success", "Caméra active", "L’aperçu vidéo est en direct.");
+        log("success", "Caméra démarrée (" + (s.width || "?") + "×" + (s.height || "?") + ")");
+      }catch(e){
+        releaseStream();
+        setCamUI(false);
+        const [type, title, msg] = cameraErrorInfo(e);
+        banner("camBanner", type, title, msg);
+        log(type, "Caméra : " + title);
+      }
+    }
+
+    function releaseStream(){
+      if (stream){ stream.getTracks().forEach(t => t.stop()); stream = null; }
+      $("video").srcObject = null;
+    }
+    function stopCamera(){
+      releaseStream();
+      setCamUI(false);
+      banner("camBanner", "info", "Caméra arrêtée", "Appuyez sur Démarrer pour relancer l’aperçu.");
+      log("info", "Caméra arrêtée");
+    }
+
+    $("camToggle").addEventListener("click", () => stream ? stopCamera() : startCamera());
+    $("camSwitch").addEventListener("click", () => { facing = facing === "environment" ? "user" : "environment"; startCamera(); });
+
+    /* =====================================================
+       3) DEVICE ORIENTATION
+       ===================================================== */
+    let oriActive = false, oriGot = false, oriTimer = null;
+    const pct = (v, min, max) => Math.max(0, Math.min(100, (v - min) / (max - min) * 100));
+
+    function onOrientation(e){
+      if (e.alpha === null && e.beta === null && e.gamma === null) return;
+      if (!oriGot){
+        oriGot = true;
+        banner("oriBanner", "success", "Capteurs actifs", "Inclinez votre téléphone pour voir les valeurs changer.");
+        log("success", "Données d’orientation reçues");
+      }
+      const a = e.alpha || 0, b = e.beta || 0, g = e.gamma || 0;
+      $("oA").textContent = a.toFixed(1) + "°";
+      $("oB").textContent = b.toFixed(1) + "°";
+      $("oG").textContent = g.toFixed(1) + "°";
+      $("kA").style.left = pct(a, 0, 360) + "%";
+      $("kB").style.left = pct(b, -180, 180) + "%";
+      $("kG").style.left = pct(g, -90, 90) + "%";
+      $("phone").style.transform = `rotateX(${90 - b}deg) rotateY(${g}deg)`;
+      $("needle").style.transform = `rotate(${-a}deg)`;
+    }
+
+    function setOriUI(active){
+      const t = $("oriToggle");
+      t.className = "btn " + (active ? "btn-danger" : "btn-primary");
+      t.querySelector("span").textContent = active ? "Arrêter l’observation" : "Démarrer l’observation";
+      tile("ori", active ? "on" : (CAN.ori ? "ok" : "ko"), active ? "Actif" : (CAN.ori ? "Compatible" : "Non supporté"));
+    }
+
+    async function startOrientation(){
+      if (!CAN.ori)
+        return banner("oriBanner", "error", "Non supporté", "La DeviceOrientation API n’est pas disponible sur cet appareil.");
+      if (typeof DeviceOrientationEvent.requestPermission === "function"){   // iOS Safari
+        try{
+          const r = await DeviceOrientationEvent.requestPermission();
+          if (r !== "granted") return banner("oriBanner", "error", "Accès refusé", "L’accès aux capteurs de mouvement a été refusé.");
+        }catch(e){
+          return banner("oriBanner", "error", "Erreur", e.message);
+        }
+      }
+      oriGot = false;
+      window.addEventListener("deviceorientation", onOrientation);
+      oriActive = true;
+      setOriUI(true);
+      banner("oriBanner", "info", "En attente des capteurs…", "Les premières valeurs arrivent dans un instant.");
+      log("info", "Observation de l’orientation démarrée");
+      clearTimeout(oriTimer);
+      oriTimer = setTimeout(() => {
+        if (oriActive && !oriGot){
+          banner("oriBanner", "error", "Aucune donnée reçue", "Capteurs absents ou désactivés. Sur émulateur, utilisez « Virtual sensors ».");
+          log("error", "Orientation : aucun capteur détecté");
+        }
+      }, 3000);
+    }
+
+    function stopOrientation(){
+      window.removeEventListener("deviceorientation", onOrientation);
+      clearTimeout(oriTimer);
+      oriActive = false;
+      setOriUI(false);
+      banner("oriBanner", "info", "Observation arrêtée", "Appuyez sur Démarrer pour reprendre.");
+      log("info", "Observation de l’orientation arrêtée");
+    }
+    $("oriToggle").addEventListener("click", () => oriActive ? stopOrientation() : startOrientation());
+
+    /* ---------- Économie de ressources ---------- */
+    document.addEventListener("visibilitychange", () => { if (document.hidden && stream) stopCamera(); });
+</script>
+</body>
+</html>
