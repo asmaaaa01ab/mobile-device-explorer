@@ -1,6 +1,6 @@
 <div align="center">
 
-# Device Explorer
+# Mobile Device Explorer
 
 **Une application web mobile pour explorer et tester les Device API du smartphone**
 Géolocalisation · Caméra · Orientation
@@ -62,7 +62,7 @@ Les smartphones embarquent de nombreux capteurs (GPS, caméra, gyroscope, accél
 
 | Accueil | Position | Caméra | Orientation |
 |:---:|:---:|:---:|:---:|
-| ![Accueil](docs/screenshots/home.png) | ![Position](docs/screenshots/geo.png) | ![Caméra](docs/screenshots/camera.png) | ![Orientation](docs/screenshots/orientation.png) |
+| ![Accueil]([docs/screenshots/home.png](https://github.com/asmaaaa01ab/mobile-device-explorer/blob/main/docs/screenshots/home.jpeg)) | ![Position]([docs/screenshots/geo.png](https://github.com/asmaaaa01ab/mobile-device-explorer/blob/main/docs/screenshots/geo.jpeg)) | ![Caméra]([docs/screenshots/camera.png](https://github.com/asmaaaa01ab/mobile-device-explorer/blob/main/docs/screenshots/camera.jpeg)) | ![Orientation]([docs/screenshots/orientation.png](https://github.com/asmaaaa01ab/mobile-device-explorer/blob/main/docs/screenshots/orientation.jpeg)) |
 
 </div>
 
